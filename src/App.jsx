@@ -7,15 +7,11 @@ import PartnerDashboard from './components/PartnerDashboard';
 import AseanExplorer from './components/AseanExplorer';
 import TalentHub from './components/TalentHub';
 import AseanChatbot from './components/AseanChatbot';
-import ApiKeyModal from './components/ApiKeyModal';
 import Footer from './components/Footer';
-import { getStoredApiKey } from './services/gemmaService';
 
 export default function App() {
   const [activeRole, setActiveRole] = useState('founder'); // 'founder' | 'talent' | 'partner'
   const [verifiedStartup, setVerifiedStartup] = useState(null);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  const [hasCustomKey, setHasCustomKey] = useState(Boolean(getStoredApiKey()));
 
   const handleScrollToScanner = () => {
     if (activeRole !== 'founder') {
@@ -45,14 +41,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-teal-200 selection:text-teal-900">
       
       {/* Top Navigation */}
       <Navbar
         activeRole={activeRole}
         setActiveRole={setActiveRole}
-        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-        hasCustomKey={hasCustomKey}
       />
 
       <main className="flex-1">
@@ -92,13 +86,6 @@ export default function App() {
 
       {/* Interactive Gemma 4 ASEAN Navigator AI Chatbot */}
       <AseanChatbot verifiedStartup={verifiedStartup} />
-
-      {/* Google AI Studio API Key Configuration Modal */}
-      <ApiKeyModal
-        isOpen={isApiKeyModalOpen}
-        onClose={() => setIsApiKeyModalOpen(false)}
-        onKeySaved={(hasKey) => setHasCustomKey(hasKey)}
-      />
 
       {/* Footer */}
       <Footer
