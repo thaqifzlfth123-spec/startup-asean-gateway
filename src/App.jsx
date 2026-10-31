@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import CertificateScanner from './components/CertificateScanner';
 import VerifiedDashboard from './components/VerifiedDashboard';
+import PartnerDashboard from './components/PartnerDashboard';
 import AseanExplorer from './components/AseanExplorer';
 import TalentHub from './components/TalentHub';
 import AseanChatbot from './components/AseanChatbot';
@@ -17,7 +18,12 @@ export default function App() {
   const [hasCustomKey, setHasCustomKey] = useState(Boolean(getStoredApiKey()));
 
   const handleScrollToScanner = () => {
-    document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' });
+    if (activeRole !== 'founder') {
+      setActiveRole('founder');
+    }
+    setTimeout(() => {
+      document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleScrollToExplorer = () => {
@@ -42,34 +48,35 @@ export default function App() {
           onExplore={handleScrollToExplorer}
         />
 
-        {/* Certificate Scanner (Always visible for Founder role or when onboarding) */}
-        {(activeRole === 'founder' || activeRole === 'partner') && (
-          <CertificateScanner
-            verifiedResult={verifiedStartup}
-            onVerificationSuccess={(result) => setVerifiedStartup(result)}
-          />
+        {/* 1. FOUNDER PERSONA: Scan & Verify Official Certificate, then view personalized dashboard */}
+        {activeRole === 'founder' && (
+          <>
+            <CertificateScanner
+              verifiedResult={verifiedStartup}
+              onVerificationSuccess={(result) => setVerifiedStartup(result)}
+            />
+
+            {verifiedStartup && (
+              <VerifiedDashboard verifiedStartup={verifiedStartup} />
+            )}
+          </>
         )}
 
-        {/* Dynamic Matched Dashboard for Verified Startup */}
-        {verifiedStartup && (
-          <VerifiedDashboard verifiedStartup={verifiedStartup} />
-        )}
-
-        {/* Talent Hub: Active if Talent role selected or always available */}
+        {/* 2. TALENT PERSONA: Regional Builder Network, Job Matching & Co-Founder Pool */}
         {activeRole === 'talent' && (
           <TalentHub verifiedStartup={verifiedStartup} />
         )}
 
-        {/* ASEAN Explorer / Single Gateway Directory */}
-        <AseanExplorer />
-
-        {/* Show TalentHub at bottom of founder role too if verified */}
-        {activeRole === 'founder' && !verifiedStartup && (
-          <TalentHub verifiedStartup={verifiedStartup} />
+        {/* 3. ECOSYSTEM & VC PERSONA: Dealflow Pipeline, Pre-Audited Startups & Due Diligence Inspector */}
+        {activeRole === 'partner' && (
+          <PartnerDashboard verifiedStartup={verifiedStartup} />
         )}
+
+        {/* ASEAN Explorer / Single Gateway Directory (Common to all roles) */}
+        <AseanExplorer />
       </main>
 
-      {/* Interactive Gemma ASEAN Navigator AI Chatbot */}
+      {/* Interactive Gemma 4 ASEAN Navigator AI Chatbot */}
       <AseanChatbot verifiedStartup={verifiedStartup} />
 
       {/* Google AI Studio API Key Configuration Modal */}
