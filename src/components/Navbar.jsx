@@ -76,13 +76,19 @@ export default function Navbar({ activeRole, setActiveRole, onOpenApiKeyModal, h
               <span className="hidden sm:inline">{hasCustomKey ? 'Live Gemma Key: Active' : 'API Key: Demo / AI Studio'}</span>
             </button>
 
-            <a
-              href="#scanner"
-              className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-blue-500/20 hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center gap-1.5"
+            <button
+              type="button"
+              onClick={() => {
+                setActiveRole('founder');
+                setTimeout(() => {
+                  document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-blue-500/20 hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Award className="w-3.5 h-3.5" />
               <span>Verify Startup</span>
-            </a>
+            </button>
           </div>
 
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Globe, Heart, Shield, Award, Sparkles, ExternalLink } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ onNavigateScanner, onNavigateExplorer, onNavigateTalent }) {
   return (
     <footer className="border-t border-slate-800 bg-slate-950 py-12 text-xs text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,10 +39,10 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Quick Navigation</h4>
             <ul className="space-y-1.5 text-slate-400 text-xs">
-              <li><a href="#scanner" className="hover:text-cyan-400">Scan Startup Certificate</a></li>
-              <li><a href="#dashboard" className="hover:text-cyan-400">Matched Opportunities</a></li>
-              <li><a href="#explorer" className="hover:text-cyan-400">ASEAN Directory</a></li>
-              <li><a href="#talenthub" className="hover:text-cyan-400">Regional Talent Hub</a></li>
+              <li><button type="button" onClick={onNavigateScanner} className="hover:text-cyan-400 cursor-pointer">Scan Startup Certificate</button></li>
+              <li><button type="button" onClick={onNavigateScanner} className="hover:text-cyan-400 cursor-pointer">Matched Opportunities</button></li>
+              <li><button type="button" onClick={onNavigateExplorer} className="hover:text-cyan-400 cursor-pointer">ASEAN Directory (Ecosystem &amp; VCs)</button></li>
+              <li><button type="button" onClick={onNavigateTalent} className="hover:text-cyan-400 cursor-pointer">Regional Talent Hub</button></li>
               <li><a href="https://events.mlh.com/events/14817-hacktoberfest-hack-day-kuala-lumpur" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 flex items-center gap-1">MLH Event Page <ExternalLink className="w-3 h-3" /></a></li>
             </ul>
           </div>

@@ -27,7 +27,21 @@ export default function App() {
   };
 
   const handleScrollToExplorer = () => {
-    document.getElementById('explorer')?.scrollIntoView({ behavior: 'smooth' });
+    if (activeRole !== 'partner') {
+      setActiveRole('partner');
+    }
+    setTimeout(() => {
+      document.getElementById('explorer')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleScrollToTalent = () => {
+    if (activeRole !== 'talent') {
+      setActiveRole('talent');
+    }
+    setTimeout(() => {
+      document.getElementById('talenthub')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   return (
@@ -67,13 +81,13 @@ export default function App() {
           <TalentHub verifiedStartup={verifiedStartup} />
         )}
 
-        {/* 3. ECOSYSTEM & VC PERSONA: Dealflow Pipeline, Pre-Audited Startups & Due Diligence Inspector */}
+        {/* 3. ECOSYSTEM & VC PERSONA: Dealflow Pipeline, Due Diligence + Single Gateway to ASEAN Ecosystem */}
         {activeRole === 'partner' && (
-          <PartnerDashboard verifiedStartup={verifiedStartup} />
+          <>
+            <PartnerDashboard verifiedStartup={verifiedStartup} />
+            <AseanExplorer verifiedStartup={verifiedStartup} />
+          </>
         )}
-
-        {/* ASEAN Explorer / Single Gateway Directory (Common to all roles) */}
-        <AseanExplorer />
       </main>
 
       {/* Interactive Gemma 4 ASEAN Navigator AI Chatbot */}
@@ -87,7 +101,11 @@ export default function App() {
       />
 
       {/* Footer */}
-      <Footer />
+      <Footer
+        onNavigateScanner={handleScrollToScanner}
+        onNavigateExplorer={handleScrollToExplorer}
+        onNavigateTalent={handleScrollToTalent}
+      />
 
     </div>
   );
