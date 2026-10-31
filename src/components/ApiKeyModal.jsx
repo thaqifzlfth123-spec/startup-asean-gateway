@@ -42,12 +42,12 @@ export default function ApiKeyModal({ isOpen, onClose, onKeySaved }) {
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Google AI Studio API Key</h3>
-            <p className="text-xs text-slate-400">Power Gemma 4 Multimodal Vision & Chat</p>
+            <p className="text-xs text-slate-400">Model: <code className="text-cyan-300">gemma-4-26b-a4b-it</code> (@google/genai)</p>
           </div>
         </div>
 
         <p className="text-xs text-slate-300 my-3 leading-relaxed">
-          Provide your Google AI Studio API key to send live multimodal calls to Google's Gemini / Gemma models. Your key is stored locally in your browser.
+          Paste your Google AI Studio <code className="text-cyan-300">GEMINI_API_KEY</code> to activate live <strong className="text-white">Gemma 4 (26B-A4B-IT)</strong> multimodal certificate vision, <code className="text-cyan-300">ThinkingLevel.HIGH</code> reasoning, and Google Search grounding.
         </p>
 
         <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-900/40 text-[11px] text-cyan-300 mb-4 flex items-start gap-2">

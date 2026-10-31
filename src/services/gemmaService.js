@@ -1,232 +1,406 @@
-// Gemma 4 / Google AI Studio Multimodal Service
-// Connects to Google AI Studio API for Vision & Chat analysis, with robust fallback
+// Official Gemma 4 (gemma-4-26b-a4b-it) Multimodal & Search-Grounded Service
+// Built with @google/genai SDK from Google AI Studio
+
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
+
+export const GEMMA_MODEL_ID = 'gemma-4-26b-a4b-it';
 
 export const getStoredApiKey = () => {
-  return localStorage.getItem('AURA_GEMINI_API_KEY') || import.meta.env.VITE_GEMINI_API_KEY || '';
+  return (
+    localStorage.getItem('AURA_GEMINI_API_KEY') ||
+    import.meta.env.VITE_GEMINI_API_KEY ||
+    ''
+  ).trim();
 };
 
 export const setStoredApiKey = (key) => {
-  if (key) {
-    localStorage.setItem('AURA_GEMINI_API_KEY', key);
+  if (key && key.trim()) {
+    localStorage.setItem('AURA_GEMINI_API_KEY', key.trim());
   } else {
     localStorage.removeItem('AURA_GEMINI_API_KEY');
   }
 };
 
 /**
- * Analyze an uploaded startup certificate image using Gemma / Gemini Multimodal API
- * @param {string} base64Data - base64 string of the image (or data URL)
- * @param {string} mimeType - mime type e.g. 'image/png'
- * @param {object} sampleMetadata - optional metadata if a sample was chosen
+ * Rasterizes an SVG URL or SVG data URL onto an HTML5 Canvas and exports crisp PNG base64.
+ * Required because Vision models accept raster formats (image/png, image/jpeg, image/webp) or application/pdf.
  */
-export async function analyzeCertificate(base64Data, mimeType = 'image/jpeg', sampleMetadata = null) {
-  const apiKey = getStoredApiKey();
+async function rasterizeSvgToPngBase64(svgSrc) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const width = img.naturalWidth || 1200;
+        const height = img.naturalHeight || 840;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const pngDataUrl = canvas.toDataURL('image/png');
+        const base64 = pngDataUrl.replace(/^data:image\/png;base64,/, '');
+        resolve({ base64, mimeType: 'image/png' });
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = (e) => reject(new Error('Failed to load SVG certificate into image canvas'));
+    img.src = svgSrc;
+  });
+}
 
-  // If user provided an API key, attempt live call to Google AI Studio
-  if (apiKey && base64Data) {
+/**
+ * Converts any image URL, SVG URL, or FileReader data URL into { base64, mimeType } ready for Gemma 4 inlineData.
+ */
+async function prepareInlineMedia(urlOrData) {
+  if (!urlOrData) return null;
+
+  // 1. Data URL from user file upload
+  if (urlOrData.startsWith('data:')) {
+    const mimeMatch = urlOrData.match(/^data:([^;]+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+    if (mimeType.includes('svg')) {
+      return await rasterizeSvgToPngBase64(urlOrData);
+    }
+
+    const base64 = urlOrData.replace(/^data:[^;]+;base64,/, '');
+    return { base64, mimeType };
+  }
+
+  // 2. Relative or remote URL (e.g. /certificates/ssm-malaysia-cert.svg)
+  if (urlOrData.toLowerCase().endsWith('.svg')) {
+    return await rasterizeSvgToPngBase64(urlOrData);
+  }
+
+  const res = await fetch(urlOrData);
+  const blob = await res.blob();
+  if (blob.type.includes('svg')) {
+    return await rasterizeSvgToPngBase64(urlOrData);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      const mimeMatch = result.match(/^data:([^;]+);base64,/);
+      const mimeType = mimeMatch ? mimeMatch[1] : blob.type || 'image/jpeg';
+      const base64 = result.replace(/^data:[^;]+;base64,/, '');
+      resolve({ base64, mimeType });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * Safely extracts JSON object from model text output (handles markdown code fences or leading prose).
+ */
+function parseJsonFromModelText(rawText) {
+  if (!rawText) throw new Error('Empty response from Gemma 4');
+  const cleaned = rawText
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+    }
+    throw new Error('Could not parse structured JSON from Gemma 4 output');
+  }
+}
+
+/**
+ * Analyze an uploaded startup certificate image using ACTUAL Gemma 4 (`gemma-4-26b-a4b-it`) via @google/genai
+ * @param {string} imageSource - base64 data URL or relative URL of certificate
+ * @param {string} defaultMime - fallback mime type
+ * @param {object} sampleMetadata - optional metadata if a sample was chosen
+ * @param {function} onStreamProgress - optional callback for live streaming feedback
+ */
+export async function analyzeCertificate(
+  imageSource,
+  defaultMime = 'image/png',
+  sampleMetadata = null,
+  onStreamProgress = null
+) {
+  const apiKey = getStoredApiKey();
+  let liveApiError = null;
+
+  if (apiKey && imageSource) {
     try {
-      const cleanBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
-      
-      const prompt = `
-You are Gemma 4 Vision, an open-weight AI multimodal auditor for the "Startup ASEAN" initiative.
-Analyze this official startup registration / incorporation certificate.
-Extract the following information in valid JSON only (no markdown, no backticks, no code fence):
+      const media = await prepareInlineMedia(imageSource);
+
+      if (media && media.base64) {
+        const ai = new GoogleGenAI({ apiKey });
+
+        const prompt = `You are Gemma 4, the official multimodal AI auditor for the "Startup ASEAN" Single Gateway.
+Carefully inspect this startup registration / incorporation certificate image and extract all company details, then synthesize personalized ASEAN cross-border recommendations across 4 pillars: Founder, Funding, Opportunities, and Talent.
+
+Return ONLY a valid JSON object matching this exact structure (no markdown fences, no extra commentary):
 {
-  "name": "Full legal company name",
+  "name": "Full legal company name from the certificate",
   "country": "Country name (e.g. Malaysia, Singapore, Indonesia, Vietnam, Thailand, Philippines)",
-  "countryCode": "2-letter ISO country code (e.g. MY, SG, ID, VN, TH, PH)",
-  "regNumber": "Official company registration / UEN / NIB number",
-  "authority": "Issuing government agency or registry (e.g. SSM, ACRA, BKPM/AHU, etc.)",
-  "certType": "Type of certificate (e.g. Certificate of Incorporation, Business Profile)",
-  "incorpDate": "Incorporation or registration date",
-  "sector": "Primary industry sector (e.g. AI & SaaS, FinTech, AgriTech, HealthTech, E-Commerce)",
-  "stage": "Estimated startup stage (e.g. Pre-Seed, Early Stage / Seed, Growth)",
+  "countryCode": "2-letter ISO code (MY, SG, ID, VN, TH, PH)",
+  "regNumber": "Official registration / UEN / NIB number from the certificate",
+  "authority": "Issuing government agency or registry (e.g. Suruhanjaya Syarikat Malaysia (SSM), ACRA, BKPM/AHU)",
+  "certType": "Type of certificate shown",
+  "incorpDate": "Incorporation or registration date shown",
+  "sector": "Primary industry sector inferred from the certificate",
+  "directors": ["Director / Founder 1", "Director / Founder 2"],
+  "stage": "Estimated startup stage (e.g. Early Stage / Seed, Pre-Series A)",
   "readinessScore": 95,
-  "description": "2-sentence summary of the company purpose and relevance to ASEAN digital transformation",
-  "crossBorderMatches": [
-    "Recommended funding programmes",
-    "Regional partner soft-landing",
-    "Recommended talent profiles"
+  "description": "2-sentence executive assessment of the company and its cross-border ASEAN expansion potential.",
+  "founderAnalysis": {
+    "team": "Names and roles of founders/directors listed on the certificate",
+    "equity": "Jurisdiction & shareholding compliance note for national grants",
+    "strengths": "1-2 sentences on founding governance strengths & ASEAN expansion readiness"
+  },
+  "fundingEligibility": {
+    "flagshipGrant": "Best matching national/ASEAN grant (e.g. Cradle CIP Spark & Sprint, Startup SG Founder, Kemenparekraf / Indigo)",
+    "amount": "Grant check size (e.g. Up to RM 600,000 Equity-Free, S$ 50,000 - S$ 250,000)",
+    "vcPipeline": ["Top Regional VC 1", "Top Regional VC 2", "Top Regional VC 3"]
+  },
+  "opportunityCorridors": [
+    "Specific ASEAN accelerator or corporate pilot programme 1",
+    "Specific bilateral soft-landing or workspace corridor 2",
+    "Specific regional talent visa or cross-border rail programme 3"
+  ],
+  "talentNeeds": [
+    { "role": "Priority Hire Role 1 tailored to sector", "match": "Recommended ASEAN skill profile / match %" },
+    { "role": "Priority Hire Role 2 tailored to cross-border GTM", "match": "Recommended ASEAN skill profile / match %" }
   ]
 }`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: prompt },
-                  {
-                    inline_data: {
-                      mime_type: mimeType,
-                      data: cleanBase64
-                    }
-                  }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.2,
-              response_mime_type: 'application/json'
-            }
-          })
-        }
-      );
+        const config = {
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.HIGH,
+          },
+          tools: [
+            {
+              googleSearch: {},
+            },
+          ],
+        };
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const parsed = JSON.parse(text);
-          return {
-            ...parsed,
-            verified: true,
-            source: 'Google AI Studio (Live Gemma Vision)',
-            confidence: 0.98
-          };
+        const contents = [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType: media.mimeType || defaultMime,
+                  data: media.base64,
+                },
+              },
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ];
+
+        let responseStream;
+        try {
+          responseStream = await ai.models.generateContentStream({
+            model: GEMMA_MODEL_ID,
+            config,
+            contents,
+          });
+        } catch (toolErr) {
+          // Retry without googleSearch tool if search grounding is restricted on multimodal JSON calls
+          responseStream = await ai.models.generateContentStream({
+            model: GEMMA_MODEL_ID,
+            config: {
+              thinkingConfig: {
+                thinkingLevel: ThinkingLevel.HIGH,
+              },
+            },
+            contents,
+          });
         }
+
+        let fullText = '';
+        for await (const chunk of responseStream) {
+          if (chunk.text) {
+            fullText += chunk.text;
+            if (onStreamProgress) {
+              onStreamProgress(fullText.length);
+            }
+          }
+        }
+
+        const parsed = parseJsonFromModelText(fullText);
+        return {
+          ...(sampleMetadata ? { previewUrl: sampleMetadata.previewUrl } : {}),
+          ...parsed,
+          verified: true,
+          isLiveApi: true,
+          modelUsed: GEMMA_MODEL_ID,
+          source: `Live Gemma 4 (${GEMMA_MODEL_ID})`,
+          confidence: 0.99,
+        };
       }
     } catch (err) {
-      console.warn('Live API call failed, falling back to neural emulation:', err);
+      console.error('Live Gemma 4 API error:', err);
+      liveApiError = err?.message || 'Failed to reach Gemma 4 API';
     }
   }
 
-  // Fallback simulator with realistic AI extraction delay and high-precision parsing
-  await new Promise((resolve) => setTimeout(resolve, 1800));
+  // Offline demo fallback when no API key is configured (or if API call errored)
+  await new Promise((resolve) => setTimeout(resolve, 1400));
 
   if (sampleMetadata) {
     return {
       ...sampleMetadata,
       verified: true,
-      source: 'Gemma 4 Multimodal Neural Engine (Verified)',
+      isLiveApi: false,
+      modelUsed: 'Offline Simulation (Add API Key for Live gemma-4-26b-a4b-it)',
+      source: 'Demo Simulation Mode',
+      apiError: liveApiError,
       confidence: 0.97,
-      crossBorderMatches: [
-        'Cradle CIP Spark / Sprint Grant (Malaysia MOSTI)',
-        'Startup SG Soft-Landing Corridor (Singapore)',
-        'East Ventures Seed Pipeline (Indonesia & ASEAN)',
-        'ASEAN Cross-Border Remote Engineering Talent Network'
-      ]
     };
   }
 
-  // Generic parsed document fallback
   return {
     name: 'Nexus Horizon Technologies Sdn Bhd',
     country: 'Malaysia',
     countryCode: 'MY',
-    regNumber: '202401089241 (1583091-T)',
+    regNumber: '202401048821 (1568212-A)',
     authority: 'Suruhanjaya Syarikat Malaysia (SSM)',
     certType: 'Certificate of Incorporation of Private Company',
-    incorpDate: '12 March 2024',
+    incorpDate: '14 February 2024',
     sector: 'Artificial Intelligence & Regional Cloud Infrastructure',
-    directors: ['Nur Aisyah binti Ridzuan', 'Kenji Sato'],
-    address: 'Suite 21-04, Vertical Corporate Tower B, Bangsar South, Kuala Lumpur',
+    directors: ['Ahmad Thaqif bin Zulkifli (Founder & CEO)', 'Elena Tan Li Wei (CTO)'],
+    address: 'Level 14, Mercu 2, KL Eco City, 59200 Kuala Lumpur',
     stage: 'Early Stage / Seed',
     readinessScore: 94,
-    description: 'Autonomous open-weight AI agent harness designed for cross-border logistics and compliance throughout ASEAN.',
+    description:
+      'Autonomous open-weight AI agent harness designed for cross-border logistics and compliance throughout ASEAN.',
     verified: true,
-    source: 'Gemma 4 Multimodal Neural Engine',
+    isLiveApi: false,
+    modelUsed: 'Offline Simulation (Add API Key for Live gemma-4-26b-a4b-it)',
+    source: 'Demo Simulation Mode',
+    apiError: liveApiError,
     confidence: 0.96,
-    crossBorderMatches: [
-      'MyStartup / Cradle CIP Spark Grant (MY)',
-      'Enterprise Singapore Soft Landing (SG)',
-      'Odra Venture AI Fellowship & Seed Acceleration',
-      'Kracked Devs Builder Network & Talent Matching'
-    ]
+    founderAnalysis: {
+      team: 'Ahmad Thaqif (CEO) & Elena Tan (CTO)',
+      equity: '100% Malaysian Shareholding (51%+ local quota verified)',
+      strengths:
+        'Deep technical AI model deployment capabilities; compliant with MOSTI & Cradle fund governance guidelines.',
+    },
+    talentNeeds: [
+      { role: 'Senior AI / LLM Engineer', location: 'Malaysia / Remote', match: 'Farhan Azman (98% match)' },
+      { role: 'VP Regional Growth & GTM', location: 'Singapore / Regional', match: 'Stephanie Lim (94% match)' },
+    ],
+    fundingEligibility: {
+      flagshipGrant: 'Cradle CIP Spark & CIP Sprint (MOSTI)',
+      amount: 'Up to RM 600,000 (100% Equity-Free)',
+      vcPipeline: ['East Ventures Seed X', '500 Southeast Asia III', 'Odra Venture AI Fellowship'],
+    },
+    opportunityCorridors: [
+      'DOJO Coworking Reciprocal Access (KL & Singapore)',
+      'Sunway iLabs Super Accelerator Pilot Validation',
+      'MDEC DE Rantau Foreign Tech Talent Visa Sponsorship',
+    ],
   };
 }
 
 /**
- * Ask the Gemma ASEAN Navigator chatbot
+ * Ask the Gemma 4 ASEAN Navigator chatbot using generateContentStream + ThinkingLevel.HIGH + googleSearch
  */
-export async function askAseanNavigator(query, context = {}) {
+export async function askAseanNavigator(query, context = {}, onChunk = null) {
   const apiKey = getStoredApiKey();
 
   if (apiKey) {
     try {
-      const systemPrompt = `You are "Aura", the official AI Navigator for Startup ASEAN powered by Gemma.
-Your mission is to help founders, talent, and investors solve ecosystem fragmentation across ASEAN countries (Malaysia, Singapore, Indonesia, Thailand, Vietnam, Philippines, etc.).
-Context of verified startup: ${JSON.stringify(context)}
-Be concise, practical, highly encouraging, and provide concrete grants, government agencies (Cradle, Enterprise SG, NIA, NIC), tax incentives, or talent strategies. Format response with markdown bullet points.`;
+      const ai = new GoogleGenAI({ apiKey });
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      const systemContext = `You are "Aura", the official AI Navigator for Startup ASEAN powered by Gemma 4 (${GEMMA_MODEL_ID}).
+Your mission is to help founders, talent, and investors overcome ecosystem fragmentation across ASEAN (Malaysia, Singapore, Indonesia, Thailand, Vietnam, Philippines).
+Verified Startup Context: ${JSON.stringify(context)}
+Provide concise, actionable, well-structured guidance citing real ASEAN grants, agencies (Cradle, Startup SG / Enterprise SG, BKPM, NIA, NIC, MDEC), cross-border tax/legal tips, and regional talent strategies. Use clean markdown bullet points.`;
+
+      const tools = [
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: `${systemPrompt}\n\nUser Question: ${query}` }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 500
-            }
-          })
-        }
-      );
+          googleSearch: {},
+        },
+      ];
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
+      const config = {
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.HIGH,
+        },
+        tools,
+      };
+
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `${systemContext}\n\nUser Question: ${query}`,
+            },
+          ],
+        },
+      ];
+
+      const response = await ai.models.generateContentStream({
+        model: GEMMA_MODEL_ID,
+        config,
+        contents,
+      });
+
+      let fullReply = '';
+      for await (const chunk of response) {
+        if (chunk.text) {
+          fullReply += chunk.text;
+          if (onChunk) {
+            onChunk(fullReply);
+          }
+        }
+      }
+
+      if (fullReply.trim()) {
+        return fullReply;
       }
     } catch (err) {
-      console.warn('Chat API error, fallback to knowledge base:', err);
+      console.error('Gemma 4 Chat API error:', err);
+      return `⚠️ **Gemma 4 API Notice:** Could not complete live request (\`${err?.message || 'API Error'}\`). Please verify your Google AI Studio API key in the top bar.`;
     }
   }
 
-  // Pre-compiled knowledge base fallback for instant responsive replies
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
+  // Offline demo fallback if no API key is set
+  await new Promise((resolve) => setTimeout(resolve, 700));
   const lower = query.toLowerCase();
 
   if (lower.includes('grant') || lower.includes('fund') || lower.includes('money') || lower.includes('cradle')) {
-    return `### 💰 ASEAN Funding & Grants Recommendation
+    return `### 💰 ASEAN Funding & Grants Recommendation *(Demo Mode — Add API Key for Live Gemma 4)*
 Based on your startup's profile in **${context.country || 'Malaysia / ASEAN'}**:
 
 1. **Cradle CIP Spark / Sprint (Malaysia):**
    * **Grant Size:** Up to **RM 600,000** (100% equity-free).
-   * **Eligibility:** Registered Sdn Bhd with at least 51% Malaysian equity. Ideal for tech validation and market scale.
+   * **Eligibility:** Registered Sdn Bhd with at least 51% Malaysian equity.
 2. **Startup SG Founder (Singapore Expansion):**
-   * **Grant Size:** **S$ 50,000** matching grant via Enterprise Singapore for innovative cross-border tech ventures.
+   * **Grant Size:** **S$ 50,000** matching grant via Enterprise Singapore.
 3. **Regional Seed VCs:**
-   * **East Ventures, 500 Southeast Asia, and Odra Venture** actively back seed-stage ASEAN ventures operating cross-border.
-
-*Tip: Because your certificate is verified, you qualify for expedited review under the Startup ASEAN Fast-Track corridor!*`;
+   * **East Ventures, 500 Southeast Asia, and Odra Venture** actively back seed-stage ASEAN ventures.`;
   }
 
   if (lower.includes('talent') || lower.includes('hire') || lower.includes('engineer') || lower.includes('remote')) {
-    return `### 🧑‍💻 Cross-Border Talent & Hiring Strategy
-To scale your engineering or go-to-market team across ASEAN:
-
-1. **Malaysia Talent Pass / DE Rantau:** Simplified digital nomad and foreign tech talent passes issued by MDEC.
-2. **Remote Engineering in Vietnam & Indonesia:** Access senior backend and mobile engineers at competitive compensation (\$30-\$45/hr) with full compliance through regional EORs like Sleek or Deel ASEAN.
-3. **Kracked Devs Ecosystem:** Direct access to vetted Malaysian and regional AI builders who build with open-source tools. Check out our **Talent Pool** tab above!`;
+    return `### 🧑‍💻 Cross-Border Talent & Hiring Strategy *(Demo Mode — Add API Key for Live Gemma 4)*
+1. **Malaysia Talent Pass / DE Rantau:** Simplified foreign tech talent passes issued by MDEC.
+2. **Remote Engineering in Vietnam & Indonesia:** Access senior engineers (\$30–\$45/hr) via regional EORs.
+3. **Kracked Devs Ecosystem:** Direct access to vetted Malaysian and regional AI builders.`;
   }
 
-  if (lower.includes('singapore') || lower.includes('expand') || lower.includes('market') || lower.includes('soft landing')) {
-    return `### 🌏 Cross-Border Expansion: Soft Landing in Singapore & Indonesia
-Here is your step-by-step cross-border roadmap:
-
-1. **Entity Structure:** Keep your parent holdco in Singapore or Malaysia, while operating subsidiaries in Indonesia (PT PMA) or Vietnam.
-2. **Tax & DTA Treaties:** Take advantage of the **Malaysia-Singapore Double Taxation Avoidance** agreement to prevent double withholding on software royalties and dividends.
-3. **Banking:** Utilize multi-currency corporate banking (Aspire, Airwallex, or DBS) to settle seamlessly via PayNow-DuitNow-QRIS instant cross-border links.
-4. **Co-working:** Access reciprocal hot desks at **DOJO Coworking KL** and partner hubs across Jakarta and Singapore!`;
-  }
-
-  return `### 🚀 Startup ASEAN Gateway Intelligence
-I've analyzed your query regarding **"${query}"**.
-
-* **Unified Gateway:** Startup ASEAN unites fragmented national portals (Cradle MY, Startup SG, Kemenparekraf ID, NIA Thailand) into one unified trust network.
-* **Certificate-Backed Credibility:** By uploading your government incorporation certificate, regional investors and partners verify your legal standing in seconds.
-* **Next Action:** Explore the **Funding & Programmes** tab to view grants matched to your stage, or connect with cross-border partners in the **Talent & Partners** directory!`;
+  return `### 🚀 Startup ASEAN Gateway *(Demo Mode — Add API Key for Live \`${GEMMA_MODEL_ID}\`)*
+Click **"API Key"** in the top navigation bar and paste your **Google AI Studio** key (\`GEMINI_API_KEY\`) to activate live **Gemma 4 (\`${GEMMA_MODEL_ID}\`)** with \`ThinkingLevel.HIGH\` and Google Search grounding!`;
 }

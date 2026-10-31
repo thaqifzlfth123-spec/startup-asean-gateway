@@ -29,18 +29,32 @@ export default function AseanChatbot({ verifiedStartup }) {
     if (!text.trim() || loading) return;
 
     const userMessage = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage, { role: 'assistant', content: '' }]);
     setInput('');
     setLoading(true);
 
     try {
-      const reply = await askAseanNavigator(text, verifiedStartup || {});
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      const reply = await askAseanNavigator(text, verifiedStartup || {}, (streamedText) => {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: streamedText };
+          return updated;
+        });
+      });
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: 'assistant', content: reply };
+        return updated;
+      });
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Sorry, I encountered a temporary network delay. Please try asking again!' }
-      ]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: 'Sorry, I encountered a temporary network delay. Please try asking again!'
+        };
+        return updated;
+      });
     } finally {
       setLoading(false);
     }
@@ -97,39 +111,42 @@ export default function AseanChatbot({ verifiedStartup }) {
 
           {/* Messages Container */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-            {messages.map((m, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {m.role === 'assistant' && (
-                  <div className="w-6 h-6 rounded-md bg-blue-600/30 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </div>
-                )}
-
+            {messages.map((m, idx) => {
+              if (m.role === 'assistant' && !m.content) return null;
+              return (
                 <div
-                  className={`max-w-[85%] p-3 rounded-xl leading-relaxed whitespace-pre-wrap ${
-                    m.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none shadow-sm'
-                      : 'bg-slate-950/80 text-slate-200 border border-slate-800 rounded-bl-none'
-                  }`}
+                  key={idx}
+                  className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {m.content}
-                </div>
+                  {m.role === 'assistant' && (
+                    <div className="w-6 h-6 rounded-md bg-blue-600/30 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                  )}
 
-                {m.role === 'user' && (
-                  <div className="w-6 h-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center shrink-0 mt-0.5">
-                    <User className="w-3.5 h-3.5" />
+                  <div
+                    className={`max-w-[85%] p-3 rounded-xl leading-relaxed whitespace-pre-wrap ${
+                      m.role === 'user'
+                        ? 'bg-blue-600 text-white rounded-br-none shadow-sm'
+                        : 'bg-slate-950/80 text-slate-200 border border-slate-800 rounded-bl-none'
+                    }`}
+                  >
+                    {m.content}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {m.role === 'user' && (
+                    <div className="w-6 h-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {loading && (
               <div className="flex items-center gap-2 text-slate-400 text-xs italic bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60 w-fit">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
-                <span>Gemma is generating regional insights...</span>
+                <span>Gemma 4 (gemma-4-26b-a4b-it) thinking...</span>
               </div>
             )}
 

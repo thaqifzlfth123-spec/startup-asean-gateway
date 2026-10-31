@@ -48,27 +48,36 @@ export default function CertificateScanner({ onVerificationSuccess, verifiedResu
     if (!previewUrl && !activeSampleId) return;
 
     setIsScanning(true);
-    setScanStep('1/4: Gemma 4 Vision preprocessing document canvas...');
+    setScanStep('1/4: Rasterizing certificate canvas for Gemma 4 (gemma-4-26b-a4b-it)...');
 
-    setTimeout(() => {
-      setScanStep('2/4: Multimodal neural token extraction (Legal entity & Registry ID)...');
-    }, 600);
+    const t1 = setTimeout(() => {
+      setScanStep('2/4: Gemma 4 (ThinkingLevel.HIGH) multimodal vision analyzing certificate...');
+    }, 700);
 
-    setTimeout(() => {
-      setScanStep('3/4: Cross-referencing ASEAN National Registry Database...');
-    }, 1200);
-
-    setTimeout(() => {
-      setScanStep('4/4: Synthesizing cross-border funding, talent & partner matrix...');
-    }, 1600);
+    const t2 = setTimeout(() => {
+      setScanStep('3/4: Cross-referencing ASEAN National Registry & Grant Criteria...');
+    }, 1500);
 
     try {
       const selectedSample = SAMPLE_CERTIFICATES.find(s => s.id === activeSampleId);
-      const result = await analyzeCertificate(previewUrl, 'image/jpeg', selectedSample);
+      const result = await analyzeCertificate(
+        previewUrl,
+        'image/png',
+        selectedSample,
+        (charCount) => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          setScanStep(`4/4: Live Gemma 4 (gemma-4-26b-a4b-it) streaming structured dossier (${charCount} bytes)...`);
+        }
+      );
+      clearTimeout(t1);
+      clearTimeout(t2);
       setIsScanning(false);
       triggerConfetti();
       onVerificationSuccess(result);
     } catch (err) {
+      clearTimeout(t1);
+      clearTimeout(t2);
       console.error('Scan error:', err);
       setIsScanning(false);
       setScanStep('Scan error. Please try again.');
@@ -262,9 +271,17 @@ export default function CertificateScanner({ onVerificationSuccess, verifiedResu
                   <CheckCircle2 className="w-7 h-7" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
                       Legally Verified Entity
+                    </span>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border flex items-center gap-1 ${
+                      verifiedResult.isLiveApi
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                        : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                    }`}>
+                      <Sparkles className="w-3 h-3" />
+                      {verifiedResult.isLiveApi ? 'Live Gemma 4 (gemma-4-26b-a4b-it)' : 'Demo Simulation (Add API Key for Live Gemma 4)'}
                     </span>
                     <span className="text-xs text-slate-400 font-mono">
                       Conf: {(verifiedResult.confidence * 100).toFixed(0)}%
@@ -285,6 +302,15 @@ export default function CertificateScanner({ onVerificationSuccess, verifiedResu
                 <Award className="w-6 h-6 text-cyan-400" />
               </div>
             </div>
+
+            {verifiedResult.apiError && (
+              <div className="mt-4 p-3 rounded-xl bg-amber-950/40 border border-amber-700/50 text-xs text-amber-200 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong>Gemma 4 Live API Error (Fell back to Simulation):</strong> {verifiedResult.apiError}
+                </div>
+              </div>
+            )}
 
             {/* Extracted Certificate Fields Grid */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
