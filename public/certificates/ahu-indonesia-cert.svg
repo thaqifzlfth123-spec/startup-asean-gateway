@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%">
+  <defs>
+    <linearGradient id="idBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCFCFC" />
+      <stop offset="100%" stop-color="#F4F4F5" />
+    </linearGradient>
+    <linearGradient id="goldId" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C59B27" />
+      <stop offset="100%" stop-color="#917217" />
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="980" height="680" fill="url(#idBg)" stroke="#A1A1AA" stroke-width="2" rx="6" />
+  <rect x="25" y="25" width="950" height="650" fill="none" stroke="#B91C1C" stroke-width="2" />
+  <rect x="32" y="32" width="936" height="636" fill="none" stroke="#27272A" stroke-width="1" />
+
+  <g transform="translate(500, 75)" text-anchor="middle">
+    <!-- Garuda Symbol Placeholder -->
+    <circle cx="0" cy="15" r="26" fill="url(#goldId)" />
+    <text x="0" y="22" font-family="'Times New Roman', serif" font-size="14" font-weight="bold" fill="#FFF">RI</text>
+
+    <text x="0" y="65" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="#18181B" letter-spacing="2">
+      REPUBLIK INDONESIA
+    </text>
+    <text x="0" y="82" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#71717A" letter-spacing="1.5">
+      KEMENTERIAN HUKUM DAN HAM • BKPM LEMBAGA OSS
+    </text>
+
+    <text x="0" y="115" font-family="'Times New Roman', serif" font-size="22" font-weight="bold" fill="#B91C1C">
+      NOMOR INDUK BERUSAHA (NIB) &amp; PENGESAHAN BADAN HUKUM
+    </text>
+    <text x="0" y="132" font-family="Arial, sans-serif" font-size="11" fill="#52525B">
+      Berdasarkan Undang-Undang Republik Indonesia Nomor 11 Tahun 2020 Cipta Kerja
+    </text>
+  </g>
+
+  <line x1="150" y1="220" x2="850" y2="220" stroke="#B91C1C" stroke-width="1.5" />
+
+  <g transform="translate(500, 255)" text-anchor="middle">
+    <text x="0" y="0" font-family="'Times New Roman', serif" font-size="13" fill="#3F3F46">
+      Pemerintah Republik Indonesia menerbitkan Nomor Induk Berusaha kepada:
+    </text>
+    
+    <rect x="-350" y="15" width="700" height="42" fill="#FAFAFA" stroke="#D4D4D8" stroke-width="1" rx="4" />
+    <text x="0" y="43" font-family="'Times New Roman', serif" font-size="22" font-weight="bold" fill="#18181B">
+      PT NUSANTARA AGRO DIGITAL
+    </text>
+
+    <text x="0" y="82" font-family="Arial, sans-serif" font-size="12" fill="#52525B">
+      Nomor Induk Berusaha (NIB):
+    </text>
+    <text x="0" y="104" font-family="'Courier New', monospace" font-size="18" font-weight="bold" fill="#B91C1C" letter-spacing="2">
+      0220309142851
+    </text>
+  </g>
+
+  <g transform="translate(100, 395)" font-family="'Times New Roman', serif" font-size="12" fill="#27272A">
+    <text x="0" y="0">
+      Tanggal Terbit: <tspan font-weight="bold">22 Mei 2024</tspan> | Status: <tspan font-weight="bold" fill="#15803D">AKTIF &amp; TERVERIFIKASI SISTEM OSS RBA</tspan>
+    </text>
+    <text x="0" y="22">
+      Alamat Kantor: <tspan font-weight="bold">Gedung Cyber 2, Lt. 18, Jl. HR Rasuna Said, Jakarta Selatan 12950</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(100, 450)">
+    <rect x="0" y="0" width="560" height="130" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5" rx="6" />
+    <path d="M 0,6 Q 0,0 6,0 L 554,0 Q 560,0 560,6 L 560,26 L 0,26 Z" fill="#F4F4F5" />
+    <text x="14" y="18" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#18181B">
+      DATA PENGURUS &amp; SEKTOR DIGITAL STARTUP
+    </text>
+
+    <text x="14" y="46" font-family="Arial, sans-serif" font-size="11" fill="#27272A">
+      <tspan font-weight="bold">Direksi &amp; Pendiri:</tspan> Budi Santoso (Direktur Utama) | Rian Pratama (Komisaris)
+    </text>
+    <text x="14" y="68" font-family="Arial, sans-serif" font-size="11" fill="#27272A">
+      <tspan font-weight="bold">KBLI Utama:</tspan> 62012 - Pengembangan Aplikasi AI Pertanian &amp; Analitik Tanah
+    </text>
+    <text x="14" y="90" font-family="Arial, sans-serif" font-size="11" fill="#27272A">
+      <tspan font-weight="bold">KBLI Pendukung:</tspan> 63111 - Rantai Pasok Digital &amp; Platform Transaksi Petani
+    </text>
+    <text x="14" y="112" font-family="Arial, sans-serif" font-size="10.5" fill="#71717A">
+      <tspan font-weight="bold">Modal Ditempatkan:</tspan> Rp 1.500.000.000,00 | <tspan font-weight="bold">Tingkat Risiko:</tspan> Menengah Rendah
+    </text>
+  </g>
+
+  <!-- Seal -->
+  <g transform="translate(720, 460)">
+    <circle cx="65" cy="55" r="50" fill="#FFF" stroke="#B91C1C" stroke-width="2.5" />
+    <circle cx="65" cy="55" r="42" fill="none" stroke="#C59B27" stroke-width="1.5" />
+    <text x="65" y="42" font-family="'Times New Roman', serif" font-size="9" font-weight="bold" fill="#B91C1C" text-anchor="middle">
+      BKPM REPUBLIK INDONESIA
+    </text>
+    <text x="65" y="56" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#18181B" text-anchor="middle">
+      OSS INDONESIA
+    </text>
+    <text x="65" y="68" font-family="Arial, sans-serif" font-size="8" fill="#71717A" text-anchor="middle">
+      TERVERIFIKASI
+    </text>
+  </g>
+
+  <!-- QR -->
+  <g transform="translate(860, 465)">
+    <rect x="0" y="0" width="70" height="70" fill="#FFF" stroke="#D4D4D8" stroke-width="1" />
+    <rect x="6" y="6" width="18" height="18" fill="#18181B" />
+    <rect x="9" y="9" width="12" height="12" fill="#FFF" />
+    <rect x="11" y="11" width="8" height="8" fill="#18181B" />
+    <rect x="46" y="6" width="18" height="18" fill="#18181B" />
+    <rect x="49" y="9" width="12" height="12" fill="#FFF" />
+    <rect x="51" y="11" width="8" height="8" fill="#18181B" />
+    <rect x="6" y="46" width="18" height="18" fill="#18181B" />
+    <rect x="9" y="49" width="12" height="12" fill="#FFF" />
+    <rect x="11" y="51" width="8" height="8" fill="#18181B" />
+    <rect x="30" y="14" width="8" height="8" fill="#18181B" />
+    <rect x="32" y="32" width="14" height="14" fill="#18181B" />
+    <rect x="50" y="48" width="12" height="8" fill="#18181B" />
+    <text x="35" y="85" font-family="Arial, sans-serif" font-size="8" fill="#71717A" text-anchor="middle">
+      Pindai QR OSS
+    </text>
+  </g>
+
+  <g transform="translate(500, 630)" text-anchor="middle" font-family="'Times New Roman', serif">
+    <line x1="-120" y1="0" x2="120" y2="0" stroke="#A1A1AA" stroke-width="1" />
+    <text x="0" y="15" font-size="12" font-weight="bold" fill="#18181B">
+      BAHLIL LAHADALIA
+    </text>
+    <text x="0" y="28" font-size="10" fill="#71717A">
+      Menteri Investasi / Kepala BKPM Republik Indonesia
+    </text>
+  </g>
+</svg>

@@ -106,7 +106,21 @@ export default function CertificateScanner({ onVerificationSuccess, verifiedResu
               <Building2 className="w-3.5 h-3.5 text-cyan-400" />
               Try With Verified Sample Registry Certificates:
             </span>
-            <span className="text-[11px] text-cyan-400 font-medium">1-Click Test</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-cyan-400 font-medium">1-Click Test</span>
+              {activeSampleId && (
+                <a
+                  href={SAMPLE_CERTIFICATES.find(s => s.id === activeSampleId)?.previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="text-[11px] text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800 border border-slate-700 flex items-center gap-1"
+                >
+                  <Eye className="w-3 h-3 text-cyan-400" />
+                  <span>Open Full Dummy Cert</span>
+                </a>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {SAMPLE_CERTIFICATES.map((sample) => (
@@ -297,10 +311,95 @@ export default function CertificateScanner({ onVerificationSuccess, verifiedResu
 
             {/* Inferred Description & Cross-Border AI Match Summary */}
             <div className="mt-4 p-4 rounded-xl bg-blue-950/20 border border-blue-900/30 text-xs text-slate-300 leading-relaxed">
-              <div className="font-semibold text-cyan-300 mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Gemma 4 Cross-Border Assessment:
+              <div className="font-semibold text-cyan-300 mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Gemma 4 Cross-Border Assessment:
+                </span>
+                {verifiedResult.previewUrl && (
+                  <a
+                    href={verifiedResult.previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>View Scanned Document</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
               <p>{verifiedResult.description}</p>
+            </div>
+
+            {/* 4 Pillars Intelligence Grid */}
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              
+              {/* Pillar 1: About the Founder(s) */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex items-center gap-2 mb-2 text-cyan-400 font-bold">
+                  <Building2 className="w-4 h-4" />
+                  <span>1. About the Founder(s) &amp; Governance</span>
+                </div>
+                <div className="space-y-1.5 text-slate-300">
+                  <p><strong className="text-white">Founders:</strong> {verifiedResult.founderAnalysis?.team || verifiedResult.directors?.join(', ') || 'Founding Directors'}</p>
+                  <p><strong className="text-white">Equity &amp; Status:</strong> {verifiedResult.founderAnalysis?.equity || 'Compliant Private Limited Entity'}</p>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">{verifiedResult.founderAnalysis?.strengths || 'Direct verified legal standing in national commercial registry.'}</p>
+                </div>
+              </div>
+
+              {/* Pillar 2: About Funding & Grants */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex items-center gap-2 mb-2 text-emerald-400 font-bold">
+                  <Award className="w-4 h-4" />
+                  <span>2. About Funding &amp; Grants Unlocked</span>
+                </div>
+                <div className="space-y-1.5 text-slate-300">
+                  <p><strong className="text-white">Flagship Grant:</strong> {verifiedResult.fundingEligibility?.flagshipGrant || 'Cradle CIP Spark / Sprint (MOSTI)'}</p>
+                  <p><strong className="text-white">Grant Size:</strong> <span className="text-emerald-400 font-extrabold">{verifiedResult.fundingEligibility?.amount || 'Up to RM 600,000 (Equity-Free)'}</span></p>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    <strong className="text-slate-300">VC Targets:</strong> {verifiedResult.fundingEligibility?.vcPipeline?.join(', ') || 'East Ventures, 500 SEA, Odra Venture'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Pillar 3: About Opportunities & Programmes */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex items-center gap-2 mb-2 text-indigo-400 font-bold">
+                  <Layers className="w-4 h-4" />
+                  <span>3. About Opportunities &amp; Soft Landing</span>
+                </div>
+                <ul className="space-y-1 text-slate-300 text-[11px]">
+                  {(verifiedResult.opportunityCorridors || [
+                    'DOJO Coworking Reciprocal Access (KL & Singapore)',
+                    'Sunway iLabs Super Accelerator Corporate Pilot',
+                    'MDEC DE Rantau Tech Talent Visa Access'
+                  ]).map((opp, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-indigo-400 font-bold">•</span>
+                      <span>{opp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Pillar 4: About the Talent */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex items-center gap-2 mb-2 text-blue-400 font-bold">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>4. About Talent Needs &amp; Regional Matches</span>
+                </div>
+                <div className="space-y-1.5 text-slate-300 text-[11px]">
+                  {(verifiedResult.talentNeeds || [
+                    { role: 'Senior AI / LLM Engineer', match: 'Farhan Azman (98% match)' },
+                    { role: 'Regional Growth & GTM Lead', match: 'Stephanie Lim (94% match)' }
+                  ]).map((t, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-1.5 rounded bg-slate-900 border border-slate-800/60">
+                      <span className="font-medium text-slate-200">{t.role}</span>
+                      <span className="text-[10px] text-cyan-400 font-semibold">{t.match}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
             {/* Bottom Actions */}

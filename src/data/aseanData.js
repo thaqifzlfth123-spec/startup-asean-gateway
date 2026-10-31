@@ -19,12 +19,35 @@ export const SAMPLE_CERTIFICATES = [
     certType: 'Certificate of Incorporation (Section 17 - Act 777)',
     incorpDate: '14 February 2024',
     sector: 'Artificial Intelligence & CleanTech',
-    directors: ['Ahmad Thaqif bin Zulkifli', 'Elena Tan Li Wei'],
+    directors: ['Ahmad Thaqif bin Zulkifli (Founder & CEO)', 'Elena Tan Li Wei (Co-Founder & CTO)'],
     address: 'Level 14, Mercu 2, KL Eco City, 59200 Kuala Lumpur',
     stage: 'Early Stage / Seed',
-    readinessScore: 92,
-    previewUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
-    description: 'Autonomous carbon optimization platform leveraging open-weight AI for ASEAN manufacturing and logistics.'
+    readinessScore: 94,
+    previewUrl: '/certificates/ssm-malaysia-cert.svg',
+    downloadUrl: '/certificates/ssm-malaysia-cert.svg',
+    description: 'Autonomous carbon optimization platform leveraging open-weight AI for ASEAN manufacturing and logistics.',
+    founderAnalysis: {
+      team: 'Ahmad Thaqif (CEO) & Elena Tan (CTO)',
+      equity: '100% Malaysian Shareholding (51%+ local quota verified)',
+      strengths: 'Deep technical AI model deployment capabilities; compliant with MOSTI & Cradle fund governance guidelines.',
+      readiness: 'Exempt from local corporate audit as qualified small entity; eligible for single-window ASEAN soft landing.'
+    },
+    talentNeeds: [
+      { role: 'Senior AI / LLM Engineer', location: 'Malaysia / Remote', match: 'Farhan Azman (98% match in pool)' },
+      { role: 'VP Regional Growth & GTM', location: 'Singapore / Regional', match: 'Stephanie Lim (94% match in pool)' },
+      { role: 'Edge AI Firmware Engineer', location: 'Vietnam / ASEAN', match: 'Mai Nguyen Thao (89% match in pool)' }
+    ],
+    fundingEligibility: {
+      flagshipGrant: 'Cradle CIP Spark & CIP Sprint (MOSTI)',
+      amount: 'Up to RM 600,000 (100% Equity-Free)',
+      timeline: 'Fast-track application ready via verified SSM number',
+      vcPipeline: ['East Ventures Seed X', '500 Southeast Asia III', 'Odra Venture AI Fellowship']
+    },
+    opportunityCorridors: [
+      'DOJO Coworking Reciprocal Access (KL & Singapore)',
+      'Sunway iLabs Super Accelerator Pilot Validation',
+      'MDEC DE Rantau Foreign Tech Talent Visa Sponsorship'
+    ]
   },
   {
     id: 'sg-cert-2',
@@ -36,12 +59,35 @@ export const SAMPLE_CERTIFICATES = [
     certType: 'ACRA Business Profile & Certificate of Good Standing',
     incorpDate: '08 November 2023',
     sector: 'FinTech & Cross-Border B2B Payments',
-    directors: ['Marcus Chen', 'Nurul Huda binti Ismail'],
+    directors: ['Marcus Chen (Managing Director)', 'Nurul Huda binti Ismail (CTO)'],
     address: '71 Ayer Rajah Crescent, #04-12, Singapore 139951',
     stage: 'Pre-Series A',
-    readinessScore: 96,
-    previewUrl: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80',
-    description: 'Instant settlement gateway connecting local instant payment rails (DuitNow, PayNow, BI-FAST, PromptPay).'
+    readinessScore: 97,
+    previewUrl: '/certificates/acra-singapore-cert.svg',
+    downloadUrl: '/certificates/acra-singapore-cert.svg',
+    description: 'Instant settlement gateway connecting local instant payment rails (DuitNow, PayNow, BI-FAST, PromptPay).',
+    founderAnalysis: {
+      team: 'Marcus Chen (CEO, ex-Grab) & Nurul Huda (CTO, ex-GovTech)',
+      equity: 'Singaporean & Malaysian co-founding syndicate',
+      strengths: 'Dual-jurisdiction founding team with proven financial regulatory compliance across MAS and Bank Negara Malaysia.',
+      readiness: 'High cross-border execution readiness; pre-cleared for regional bilateral sandbox trials.'
+    },
+    talentNeeds: [
+      { role: 'Cross-Border Compliance Officer', location: 'Singapore', match: 'ACRA & MAS Certified Lead' },
+      { role: 'High-Throughput Go/Backend Engineer', location: 'Indonesia / VN', match: 'Dimas Wicaksono (91% match in pool)' },
+      { role: 'Enterprise Account Executive', location: 'Malaysia / Indo', match: 'Available in ASEAN Directory' }
+    ],
+    fundingEligibility: {
+      flagshipGrant: 'Startup SG Founder & Enterprise Development Grant (EDG)',
+      amount: 'S$ 50,000 to S$ 250,000 (Non-dilutive)',
+      timeline: 'Eligible for immediate ESG endorsement',
+      vcPipeline: ['Insignia Ventures', 'Wavemaker Partners', '500 Southeast Asia']
+    },
+    opportunityCorridors: [
+      'Antler Southeast Asia Cohort Acceleration',
+      'PayNow - DuitNow Cross-Border Settlement Corridor',
+      'Aspire / Sleek Regional Entity Corporate Suite'
+    ]
   },
   {
     id: 'id-cert-3',
@@ -53,12 +99,34 @@ export const SAMPLE_CERTIFICATES = [
     certType: 'Nomor Induk Berusaha (NIB) & SK Kemenkumham',
     incorpDate: '22 May 2024',
     sector: 'AgriTech & Rural Supply Chain',
-    directors: ['Budi Santoso', 'Rian Pratama'],
+    directors: ['Budi Santoso (Direktur Utama)', 'Rian Pratama (Komisaris)'],
     address: 'Gedung Cyber 2, Lt. 18, Jl. HR Rasuna Said, Jakarta Selatan 12950',
     stage: 'Seed Stage',
-    readinessScore: 88,
-    previewUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
-    description: 'AI-driven soil diagnostics and farm yield forecasting serving smallholders across Sumatra and Java.'
+    readinessScore: 89,
+    previewUrl: '/certificates/ahu-indonesia-cert.svg',
+    downloadUrl: '/certificates/ahu-indonesia-cert.svg',
+    description: 'AI-driven soil diagnostics and farm yield forecasting serving smallholders across Sumatra and Java.',
+    founderAnalysis: {
+      team: 'Budi Santoso (Agri Domain Lead) & Rian Pratama (Operations)',
+      equity: '100% Local Indonesian PMDN (Perseroan Terbatas)',
+      strengths: 'Deep on-the-ground rural distribution network with verified NIB under OSS RBA system.',
+      readiness: 'Ready for cross-border joint venture (PT PMA) and Malaysian export expansion.'
+    },
+    talentNeeds: [
+      { role: 'Computer Vision & Edge Model Specialist', location: 'Regional', match: 'Mai Nguyen Thao (89% match)' },
+      { role: 'React Native Offline-First Engineer', location: 'Indonesia / MY', match: 'Dimas Wicaksono (91% match)' }
+    ],
+    fundingEligibility: {
+      flagshipGrant: 'Kemenparekraf Baparekraf Scale-Up & Indigo Telkom',
+      amount: 'Rp 500M - Rp 1.5B Pilot Capital',
+      timeline: 'Open intake via National Innovation Hub',
+      vcPipeline: ['East Ventures Seed X', 'Alpha JWC Founder Studio', 'AC Ventures']
+    },
+    opportunityCorridors: [
+      'Alpha JWC Ventures EIR & Founder Studio',
+      'Cross-Border Soft Landing in Malaysia for Agri-Trade',
+      'DOJO Hub Jakarta - KL Bilateral Exchange'
+    ]
   }
 ];
 
